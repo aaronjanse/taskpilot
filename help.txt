@@ -1,0 +1,26 @@
+due 0.0.1
+The task manager that embraces procrastination.
+
+
+USAGE:
+    due                                        View tasks
+    due description... @ <timestamp...>       Add a task
+    due SUBCOMMAND                             Run a subcommand
+
+ARGS:
+    tescription...  Description of the task being added
+    timestamp...    When the task is due (see the `when` subcommand)
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+SUBCOMMANDS:
+    help    Prints this message or the help of the given subcommand(s)
+    when    Information about timestamp arguments
+
+EXAMPLES:
+
+    due math homework @ 10 pm
+    due scheduler meeting @ noon tomorrow
+
