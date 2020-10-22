@@ -134,6 +134,15 @@ pub fn parse_time(time: &str) -> Result<DateTime<Local>, &str> {
             let today = chrono::offset::Local::today();
             let spec_date = match parsed.next() {
                 Some(tok) => match tok {
+                    Weekday(n) => {
+                        let now_weekday = today.weekday().number_from_monday() as u8;
+                        let days = if n > now_weekday {
+                            n - now_weekday
+                        } else {
+                            7 + n - now_weekday
+                        };
+                        Some(today.add(chrono::Duration::days(days as i64)))
+                    },
                     RelativeDays(n) => Some(today.add(chrono::Duration::days(n as i64))),
                     Number(year_or_day) => match parsed.next() {
                         Some(tok) => match tok {

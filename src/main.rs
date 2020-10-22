@@ -20,15 +20,13 @@ struct Task {
 mod time;
 
 fn main() {
-    let db = Connection::open("./test.db").unwrap();
+    let db = Connection::open("/home/ajanse/.due.db").unwrap();
 
     if let Err(_) = db.execute(
         "CREATE TABLE tasks (
-        id              INTEGER PRIMARY KEY,
-        desc     TEXT NOT NULL,
-        due            DATE
-        )",
-        params![],
+         id    INTEGER PRIMARY KEY,
+         desc  TEXT NOT NULL,
+         due   DATE)", params![],
     ) {}
 
     if env::args().any(|e| e == "@") {
@@ -43,7 +41,6 @@ fn main() {
                 past_sep = true;
                 continue;
             }
-            println!("{}", arg);
             if past_sep {
                 when.push_str(&arg);
                 when.push_str(" ");
@@ -62,7 +59,10 @@ fn main() {
                 return;
             }
         };
-        println!("desc: {} ; due: {:?}", desc, due);
+
+        println!("Title: {}", desc);
+        println!("Deadline: {}", due.format("%c").to_string());
+        println!("Distance: {}", time::format_relative_time(due));
 
         db.execute(
             "INSERT INTO tasks (desc, due) VALUES (?1, ?2)",
@@ -74,6 +74,18 @@ fn main() {
             "DELETE FROM tasks WHERE id = ?1",
             params![id],
         ).unwrap();
+    } else if env::args().nth(1).unwrap_or("".to_string()) == "when" {
+        let when = env::args().collect::<Vec<String>>()[2..].join(" ");
+        let due = match time::parse_time(&when) {
+            Ok(x) => x,
+            Err(s) => {
+                println!("Couldn't parse timestamp `{}`.", when);
+                println!("tip: [time...] [date...]");
+                println!("error: {}", s);
+                return;
+            }
+        };
+        println!("due: {:?}", due.format("%c").to_string());
     } else {
         let mut tasks: Vec<Task> = db
             .prepare("SELECT id, desc, due FROM tasks")
