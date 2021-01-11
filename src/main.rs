@@ -2,12 +2,11 @@ use std::env;
 
 use rusqlite::{params, Connection, Result};
 
-
 use prettytable::format;
 use prettytable::{Cell, Row, Table};
 
 use chrono::offset::Local;
-use chrono::{DateTime};
+use chrono::DateTime;
 
 #[derive(Debug)]
 struct Task {
@@ -26,7 +25,8 @@ fn main() {
         "CREATE TABLE tasks (
          id    INTEGER PRIMARY KEY,
          desc  TEXT NOT NULL,
-         due   DATE)", params![],
+         due   DATE)",
+        params![],
     ) {}
 
     if env::args().any(|e| e == "@") {
@@ -67,13 +67,14 @@ fn main() {
         db.execute(
             "INSERT INTO tasks (desc, due) VALUES (?1, ?2)",
             params![desc, due],
-        ).unwrap();
+        )
+        .unwrap();
     } else if env::args().nth(1).unwrap_or("".to_string()) == "done" {
-        let id = env::args().nth(2).unwrap().parse::<i32>().unwrap();
-        db.execute(
-            "DELETE FROM tasks WHERE id = ?1",
-            params![id],
-        ).unwrap();
+        for id_str in env::args().collect::<Vec<String>>()[2..].iter() {
+            let id = id_str.parse::<i32>().unwrap();
+            db.execute("DELETE FROM tasks WHERE id = ?1", params![id])
+                .unwrap();
+        }
     } else if env::args().nth(1).unwrap_or("".to_string()) == "when" {
         let when = env::args().collect::<Vec<String>>()[2..].join(" ");
         let due = match time::parse_time(&when) {
@@ -100,7 +101,7 @@ fn main() {
             .unwrap()
             .filter_map(Result::ok)
             .collect();
-        
+
         tasks.sort_by(|a, b| a.due.partial_cmp(&b.due).unwrap());
 
         let mut table = Table::new();
@@ -113,7 +114,13 @@ fn main() {
         let now = chrono::offset::Local::now();
 
         for task in tasks {
-            let colorize = |c: Cell| if now > task.due { c.style_spec("Fr") } else { c };
+            let colorize = |c: Cell| {
+                if now > task.due {
+                    c.style_spec("Fr")
+                } else {
+                    c
+                }
+            };
             let id = colorize(Cell::new(&format!("{}", task.id)));
             let dist = colorize(Cell::new(&time::format_time_distance(task.due)));
             let due = colorize(Cell::new(&time::format_relative_time(task.due)));
